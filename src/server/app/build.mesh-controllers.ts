@@ -12,6 +12,7 @@ import { ContentController } from "../controllers/content.controller";
 import { HealthController } from "../controllers/health.controller";
 import { HydrationController } from "../controllers/hydration.controller";
 import { assertFileExists } from "../../utils/file.utils";
+import fs from "fs";
 
 /**
  * Build all server controllers on the server side at startup and prep any cacheables.
@@ -40,34 +41,47 @@ export function buildMeshControllers(
   // Build Routes for Node Content
   userOpts.manifest.faces?.forEach((face) => {
     face.views.forEach((view) => {
-      // Static Asset Handling
-      const staticPath: string = path.join(
-        // TODO: Refactor dist folder to constant
-        MINIMESH.isLocal()
-          ? MINIMESH.root.replace(/src/g, CONSTANTS.buildOutputFolder)
-          : MINIMESH.root,
-        // TODO: Refactor faces folder to constant
-        face.root ?? (view.exposeAsMesh ? "meshes" : "faces"),
-        face.path,
-        view.viewName
-      );
+      const getPath = (rootFallback: string) =>
+        path.join(
+          MINIMESH.isLocal()
+            ? MINIMESH.root.replace(/src/g, CONSTANTS.buildOutputFolder)
+            : MINIMESH.root,
+          face.root ?? rootFallback,
+          face.path,
+          view.viewName
+        );
 
-      // Check the source file sexists
-      const checkPath: string = path.join(
-        MINIMESH.root,
-        face.root ?? (view.exposeAsMesh ? "meshes" : "faces"),
-        face.path,
-        view.viewName
-      );
-      assertFileExists(checkPath, checkPath);
+      const meshPath = getPath("meshes");
+      const facePath = getPath("faces");
+
+      let verifyPath: string;
+      let staticPath: string | null = null;
+
+      if (fs.existsSync(meshPath)) {
+        staticPath = meshPath;
+        verifyPath = meshPath;
+      } else {
+        if (fs.existsSync(facePath)) {
+          staticPath = facePath;
+          verifyPath = facePath;
+        } else {
+          verifyPath = view.exposeAsMesh ? meshPath : facePath;
+        }
+      }
+
+      assertFileExists(verifyPath, verifyPath);
 
       // Static Paths
-      app.log.debug("Registering static path: " + staticPath);
-      app.register(fastifyStatic, {
-        root: staticPath,
-        prefix: `/${face.path}/${view.viewName}/`,
-        decorateReply: false,
-      });
+      if (staticPath !== null && fs.existsSync(staticPath)) {
+        app.log.debug("Registering static path: " + staticPath);
+        app.register(fastifyStatic, {
+          root: staticPath,
+          prefix: `/${face.path}/${view.viewName}/`,
+          decorateReply: false,
+        });
+      } else {
+        app.log.debug("No static path found for: " + staticPath);
+      }
 
       // Register Controllers
       new HydrationController().register(app, userOpts, face, view);
