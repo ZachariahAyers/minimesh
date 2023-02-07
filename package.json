@@ -45,7 +45,7 @@
     "commit": "cz",
     "docs": "typedoc --options typedoc.json",
     "docs:serve": "serve -l 8899 -s ./documentation",
-    "build": "run-s build:ts build:client copy:templates copy:assets",
+    "build": "run-s build:ts build:client copy:templates copy:assets docs",
     "build:dry": "tsc --build --dry",
     "build:ts": "yarn clean && tsc --build --verbose && yarn build:ts-add-js-extension",
     "build:ts:debug": "yarn clean && tsc --build --verbose",
