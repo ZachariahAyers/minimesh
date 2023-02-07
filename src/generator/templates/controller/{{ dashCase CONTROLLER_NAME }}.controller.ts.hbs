@@ -1,0 +1,9 @@
+import { MeshController, MeshInstance, ApiReply, ApiRequest } from "minimesh";
+
+export class TestController extends MeshController {
+  public register(app: MeshInstance): void {
+    app.get("/{{ dashCase CONTROLLER_NAME }}", async (_req: ApiRequest, rep: ApiReply) =>
+      rep.send("{{ dashCase CONTROLLER_NAME }} API {{> randomSalutation }}")
+    );
+  }
+}

@@ -1,0 +1,15 @@
+import { preact, MeshView, MeshClient } from "minimesh";
+import { {{ pascalCase VIEW_NAME }} } from './{{ dashCase VIEW_NAME}}.view';
+
+/**
+* {{ pascalCase VIEW_NAME }} Client Entry
+* @description: TODO
+*/
+export class {{ pascalCase VIEW_NAME }}Client extends MeshView {
+  protected override onMount(): void {
+    super.onMount();
+    preact.bootstrap({{ pascalCase VIEW_NAME }}, this.context);
+  }
+}
+
+MeshClient.registerFaceCodeBehind({{ pascalCase VIEW_NAME }}Client);

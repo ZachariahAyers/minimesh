@@ -1,0 +1,17 @@
+{
+  "name": "simple-server-example",
+  "version": "1.0.0",
+  "main": "dist/server.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "mesh-serve",
+    "build": "mesh-build",
+    "minimesh": "mesh-generate",
+    "mm": "mesh-generate",
+    "insights": "mesh-insights"
+  },
+  "dependencies": {
+    "minimesh": "file:./../../minimesh-v0.0.1-4.tgz"
+  }
+}

@@ -1,0 +1,22 @@
+@mixin border {
+  border: 1px dashed coral;
+  margin: .25rem;
+  padding: .25rem;
+
+
+}
+
+p {
+  background: coral;
+  margin: 20px;
+}
+
+:root {
+  @include border;
+  .mesh-face {
+    @include border;
+    &:hover {
+      background: darkgray;
+    }
+  }
+}

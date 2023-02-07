@@ -1,0 +1,17 @@
+import { events, http, MeshView, MeshClient, MeshEvent } from "minimesh";
+
+/**
+* {{ pascalCase VIEW_NAME }} Client Entry
+* @description: TODO
+*/
+export class {{ pascalCase VIEW_NAME }}Client extends MeshView {
+
+  protected override onMount(): void {
+    super.onMount();
+  }
+
+  protected override onMessage(_message: MeshEvent<unknown>): void {}
+
+}
+
+MeshClient.registerFaceCodeBehind({{ pascalCase VIEW_NAME }}Client);

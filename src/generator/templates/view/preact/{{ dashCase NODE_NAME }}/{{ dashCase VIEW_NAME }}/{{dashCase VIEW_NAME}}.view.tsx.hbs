@@ -1,0 +1,21 @@
+import { events, http, preact, PreactViewContext } from "minimesh";
+
+// Destructure 'preact' packages here
+const { face, hooks: { useState, useEffect } } = preact;
+
+/**
+  * {{pascalCase VIEW_NAME}}View
+  * @description: TODO
+  */
+export function {{pascalCase VIEW_NAME}}(context: PreactViewContext) {
+
+return (
+  <>
+    <div>
+      <p>view: '{{ dashCase VIEW_NAME }}' {{> randomSalutation }}</p>
+    </div>
+    <link href="{{ dashCase VIEW_NAME }}.styles.scss" rel="stylesheet"/>
+    <script src="{{ dashCase VIEW_NAME }}.client.ts"></script>
+  </>
+  );
+}

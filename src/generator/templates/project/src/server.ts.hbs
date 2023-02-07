@@ -1,0 +1,15 @@
+import viteDevServer from 'vavite/vite-dev-server';
+import vaviteHttpServer from 'vavite/http-dev-server';
+import { createMeshServer } from "minimesh";
+
+/**
+ * TODO: documentation site link
+ */
+void createMeshServer({
+  serverRoot: import.meta.url,
+  httpServer: vaviteHttpServer,
+  devServer: viteDevServer,
+  manifest: {
+    // faces: [],
+  },
+});
