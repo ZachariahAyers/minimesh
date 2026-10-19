@@ -6,7 +6,7 @@ All notable changes to this project are documented here. The format follows
 
 ## [2.0.0] - 2026-10-19
 
-A rebuild on current tooling. It does everything v1 did; the API is new.
+Built on current tooling.
 
 ### Added
 
@@ -22,9 +22,9 @@ A rebuild on current tooling. It does everything v1 did; the API is new.
 - Fastify 5. `createMeshServer` returns the instance before it listens.
 - Faces and views are named with `name`. Meshes are views with `mesh: true`.
 - Preprocessors are plain functions that fill `context.data`, run shared, then face, then view.
-  `context.template` replaces v1's `overrideTemplate`.
+  `context.template` replaces `overrideTemplate`.
 - Child faces are `{ name, url, timeout, headers }`, rendered in parallel.
-- `routeOptions` replaces v1's `paramsSchema` and `routeOpts`, on the content and data routes.
+- `routeOptions` replaces `paramsSchema` and `routeOpts`, on the content and data routes.
 - `className` and `attributes` replace `htmlContainerCssClassNames` and `htmlContainerAttributes`.
 - `plugins` replaces `manifest.controllers` and `hooks`; `staticDirs` replaces
   `assetDirectoryRoots`; `devWrapper` replaces `developmentOptions.contentWrapper`.
@@ -57,7 +57,7 @@ A rebuild on current tooling. It does everything v1 did; the API is new.
 
 ### Removed
 
-These v1 exports are covered by the platform today:
+These exports are covered by the platform today:
 
 - `utils`: `isValidHttpUrl` is `URL.canParse` (Node.js 19.9); `hash` is `crypto.hash` (Node.js
   21.7); `omit`, `combine` and `coalesce` are object spread and `??`; the array, string, number and
@@ -70,9 +70,4 @@ These v1 exports are covered by the platform today:
   (28 dependencies including puppeteer-core, 19 MB). `minimesh insights` links to the full report on
   pagespeed.web.dev and `--out` saves the JSON for Lighthouse Viewer.
 
-## [v1] - 2023-02-07
-
-The original alpha, versioned `0.0.1-4` in its package.json and tagged `v1` in this repository.
-
-[2.0.0]: https://github.com/ZachariahAyers/minimesh/compare/v1...v2.0.0
-[v1]: https://github.com/ZachariahAyers/minimesh/tree/v1
+[2.0.0]: https://github.com/ZachariahAyers/minimesh/tree/v2.0.0
