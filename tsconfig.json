@@ -15,8 +15,9 @@
     "isolatedDeclarations": true,
     "declaration": true,
     "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["src", "test", "examples", "tsdown.config.ts"]
+  "include": ["src", "test", "examples", "site", "tsdown.config.ts"]
 }
