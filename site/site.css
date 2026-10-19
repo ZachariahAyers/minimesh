@@ -1,0 +1,123 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1d2127;
+  --muted: #5b6470;
+  --accent: #0b6bcb;
+  --line: #dde2e8;
+  --code-bg: #f4f6f8;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111418;
+    --fg: #e6e9ed;
+    --muted: #9aa4b0;
+    --accent: #6cb4ff;
+    --line: #2a3038;
+    --code-bg: #1a1f25;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    1rem / 1.6 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+a {
+  color: var(--accent);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: baseline;
+  padding: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.top nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+main {
+  max-width: 50rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+pre,
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+pre {
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: 0.4rem;
+  background: var(--code-bg);
+}
+
+pre code.hljs {
+  padding: 0;
+  background: transparent;
+}
+
+:not(pre) > code {
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  background: var(--code-bg);
+}
+
+table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.demo {
+  width: 100%;
+  height: 32rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: #ffffff;
+}
+
+footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
