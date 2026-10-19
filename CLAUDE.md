@@ -11,15 +11,18 @@ request renders.
 - `npm run typecheck` - `tsc`, no emit
 - `npm test` - all suites; one file: `node --conditions=source --test test/server.test.ts`
 - `npm run build` - tsdown into `dist/`
+- `npm run site` - docs site into `site-dist/` for `/opensource/minimesh/`; `-- --base / --out <dir>` to change
 - `npm run check` - all of the above, in CI order
 
 ## Map
 
 - `src/shared.ts` - names and `ViewContext`, shared by server and browser. Change both sides together.
-- `src/server/` - `server.ts` routes, `render.ts` templates, `children.ts` child faces, `html.ts` HTML transforms
+- `src/server/` - `server.ts` routes, `render.ts` templates, `children.ts` child faces, `html.ts` HTML transforms, `device.ts`, `live.ts` dev reload
 - `src/client/` - browser runtime. Must never import from `src/server/` or `node:*`.
 - `src/preact.ts` - Preact helpers, safe on server and browser
-- `src/build.ts`, `src/cli.ts` - `minimesh build`
+- `src/cli.ts` - `minimesh` command: `build.ts`, `dev.ts`, `generate.ts`, `insights.ts`
+- `site/` - static docs site builder; `docs/GUIDE.md` is its home page
+- `docs/API.md` - hand-written reference; a test fails if an export is missing from it
 - `test/` - one `node:test` file per area; `examples/basic` is also a test fixture
 
 ## Conventions
@@ -30,6 +33,8 @@ request renders.
 - Tests import the package by name (`minimesh`, `minimesh/client`); the `source` export condition
   points them at `src/`.
 - Browser tests register happy-dom in `before` and import the runtime after.
+- Tests that run generated `.ts` use `.cache/` (git-ignored): Node will not strip types under
+  `node_modules`.
 - Comments say what the code does and why, never its history.
 - Conventional commits, lower-case after the type: `fix: keep comments in mesh pages`.
 
@@ -37,7 +42,8 @@ request renders.
 
 - `npm run check` passes.
 - A behaviour change has a test that failed before the change.
-- README, `docs/ARCHITECTURE.md` and `CHANGELOG.md` match the change.
+- `docs/GUIDE.md`, `docs/API.md`, `docs/ARCHITECTURE.md` and `CHANGELOG.md` match the change.
+- README stays short; detail belongs in `docs/`.
 
 ## Do not
 
