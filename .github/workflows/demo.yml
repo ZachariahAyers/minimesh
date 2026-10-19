@@ -1,0 +1,43 @@
+name: demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: demo
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # The docs site and its example page, built for /opensource/minimesh/ into site-dist/.
+      - run: npm run site
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::993011736775:role/gh-deploy-opensource-minimesh
+          aws-region: us-east-1
+
+      - name: Publish to ayers.repair/opensource/minimesh/
+        run: |
+          aws s3 sync site-dist/ s3://ayers-repair-site-993011736775/opensource/minimesh/ \
+            --delete --cache-control "public, max-age=300" --only-show-errors
+          aws cloudfront create-invalidation --distribution-id E1CZIGG4O8R7UI \
+            --paths "/opensource/minimesh/*" --query Invalidation.Id --output text
