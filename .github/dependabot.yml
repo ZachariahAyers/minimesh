@@ -2,13 +2,25 @@ version: 2
 updates:
   - package-ecosystem: npm
     directory: /
+    commit-message:
+      prefix: "build"
+      include: "scope"
     schedule:
       interval: monthly
     groups:
       dependencies:
         patterns: ["*"]
         update-types: [minor, patch]
+    ignore:
+      # Node and TypeScript majors move on purpose: engines and CI pin the supported Node range.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
+    commit-message:
+      prefix: "build"
+      include: "scope"
     schedule:
       interval: monthly
