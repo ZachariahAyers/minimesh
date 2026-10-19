@@ -1,3 +1,5 @@
+import { CHANNELS, DEFAULT_TOPIC } from "../shared.ts";
+
 export interface EventAddress {
   channel: string;
   topic: string;
@@ -65,3 +67,43 @@ export const events: EventBus = (() => {
   holder[GLOBAL] ??= new EventBus();
   return holder[GLOBAL];
 })();
+
+/** Sends to every view on the page. */
+export function toAll<Payload>(
+  payload: Payload,
+  topic: string = DEFAULT_TOPIC,
+): MeshEvent<Payload> {
+  return events.publish({ channel: CHANNELS.all, topic, payload });
+}
+
+/** Sends to every face, not to the mesh. */
+export function toFaces<Payload>(
+  payload: Payload,
+  topic: string = DEFAULT_TOPIC,
+): MeshEvent<Payload> {
+  return events.publish({ channel: CHANNELS.faces, topic, payload });
+}
+
+/** Sends to the mesh, the page itself. */
+export function toMesh<Payload>(
+  payload: Payload,
+  topic: string = DEFAULT_TOPIC,
+): MeshEvent<Payload> {
+  return events.publish({ channel: CHANNELS.mesh, topic, payload });
+}
+
+/**
+ * Listens on all three channels from code that is not a view, such as a widget outside any face.
+ * Returns a function that stops listening.
+ */
+export function onMessage<Payload>(
+  listener: EventListener<Payload>,
+  topic: string = DEFAULT_TOPIC,
+): () => void {
+  const offs = Object.values(CHANNELS).map((channel) =>
+    events.subscribe({ channel, topic }, listener),
+  );
+  return () => {
+    for (const off of offs) off();
+  };
+}

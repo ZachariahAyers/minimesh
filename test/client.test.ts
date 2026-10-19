@@ -21,6 +21,9 @@ function context(overrides: Partial<ViewContext>): ViewContext {
     faces: {},
     nestLevel: 1,
     baseUrl: "",
+    device: "desktop",
+    params: { path: {}, query: {} },
+    dev: false,
     ...overrides,
   };
 }
@@ -153,5 +156,38 @@ describe("defineView", () => {
     view.toMesh(1);
     for (const off of offs) off();
     assert.deepEqual(got, [CHANNELS.all, CHANNELS.faces, CHANNELS.mesh]);
+  });
+});
+
+describe("functional events", () => {
+  it("lets code outside a view send and listen on every channel", async () => {
+    const { onMessage, toAll, toFaces, toMesh, CHANNELS } = await client();
+    const heard: string[] = [];
+    const off = onMessage((event) => heard.push(event.channel));
+    toAll(1);
+    toFaces(1);
+    toMesh(1);
+    off();
+    toAll(1);
+    assert.deepEqual(heard, [CHANNELS.all, CHANNELS.faces, CHANNELS.mesh]);
+  });
+});
+
+describe("dev logging", () => {
+  it("logs each mounted view only when the server runs in dev mode", async () => {
+    const { defineView, MeshView } = await client();
+    const groups: string[] = [];
+    const original = console.groupCollapsed;
+    console.groupCollapsed = (label?: unknown) => void groups.push(String(label));
+    try {
+      document.body.innerHTML =
+        fragment("x", context({ face: "quiet" })) +
+        fragment("x", context({ face: "loud", dev: true, nestLevel: 3 }));
+      defineView("quiet", "v", MeshView);
+      defineView("loud", "v", MeshView);
+    } finally {
+      console.groupCollapsed = original;
+    }
+    assert.deepEqual(groups, ["minimesh face loud/v"]);
   });
 });

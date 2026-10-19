@@ -1,5 +1,13 @@
 import { ATTR, CHANNELS, DEFAULT_TOPIC, type PublicData, type ViewContext } from "../shared.ts";
-import { type EventAddress, type EventListener, events, type MeshEvent } from "./events.ts";
+import {
+  type EventAddress,
+  type EventListener,
+  events,
+  type MeshEvent,
+  toAll,
+  toFaces,
+  toMesh,
+} from "./events.ts";
 
 /** Browser-side code for one rendered face or mesh. Subclass it and pass the class to `defineView`. */
 export class MeshView<Data extends PublicData = PublicData> {
@@ -19,15 +27,15 @@ export class MeshView<Data extends PublicData = PublicData> {
   onMessage(_event: MeshEvent): void {}
 
   toAll<Payload>(payload: Payload, topic: string = DEFAULT_TOPIC): MeshEvent<Payload> {
-    return events.publish({ channel: CHANNELS.all, topic, payload });
+    return toAll(payload, topic);
   }
 
   toFaces<Payload>(payload: Payload, topic: string = DEFAULT_TOPIC): MeshEvent<Payload> {
-    return events.publish({ channel: CHANNELS.faces, topic, payload });
+    return toFaces(payload, topic);
   }
 
   toMesh<Payload>(payload: Payload, topic: string = DEFAULT_TOPIC): MeshEvent<Payload> {
-    return events.publish({ channel: CHANNELS.mesh, topic, payload });
+    return toMesh(payload, topic);
   }
 
   /** Subscribes until `destroy` is called. */
@@ -78,8 +86,24 @@ export function defineView<Data extends PublicData>(
     for (const channel of [CHANNELS.all, own]) {
       instance.subscribe({ channel, topic: DEFAULT_TOPIC }, onMessage);
     }
+    if (context.dev) logMount(context);
     instance.onMount();
     instances.push(instance);
   }
   return instances;
+}
+
+/** Faces nested deeper than this slow pages down; dev mode warns about it. */
+const NEST_WARNING_LEVEL = 2;
+
+function logMount(context: ViewContext): void {
+  const kind = context.mesh ? "mesh" : "face";
+  console.groupCollapsed(`minimesh ${kind} ${context.face}/${context.view}`);
+  console.info(context);
+  if (context.nestLevel >= NEST_WARNING_LEVEL) {
+    console.warn(
+      `Nested ${context.nestLevel} levels deep. Each level adds a render on the server.`,
+    );
+  }
+  console.groupEnd();
 }
