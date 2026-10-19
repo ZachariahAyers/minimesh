@@ -1,0 +1,84 @@
+{
+  "name": "minimesh",
+  "version": "2.0.0",
+  "description": "Server-composed micro-frontends: render faces on any server, compose them into pages, hydrate them as islands.",
+  "keywords": [
+    "micro-frontends",
+    "server-side-rendering",
+    "islands",
+    "fastify",
+    "preact",
+    "composition"
+  ],
+  "homepage": "https://github.com/ZachariahAyers/minimesh#readme",
+  "bugs": "https://github.com/ZachariahAyers/minimesh/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZachariahAyers/minimesh.git"
+  },
+  "license": "MIT",
+  "author": "Zachariah Ayers (https://ayers.repair)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "source": "./src/client/index.ts",
+      "default": "./dist/client.js"
+    },
+    "./preact": {
+      "source": "./src/preact.ts",
+      "default": "./dist/preact.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "minimesh": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "example": "npm run build && node dist/cli.js build examples/basic/faces --outdir examples/basic/dist && node examples/basic/server.ts",
+    "format": "biome format --write",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "prepack": "npm run build",
+    "test": "node --conditions=source --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@fastify/static": "^10.1.6",
+    "ejs": "^7.0.2",
+    "esbuild": "^0.28.2",
+    "fastify": "^5.12.7",
+    "markdown-it": "^15.0.3",
+    "node-html-parser": "^9.0.5",
+    "preact-render-to-string": "^6.8.1",
+    "sass": "^1.105.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@happy-dom/global-registrator": "^21.0.3",
+    "@types/ejs": "^3.1.5",
+    "@types/node": "^24.0.0",
+    "preact": "^11.0.1",
+    "tsdown": "^0.23.1",
+    "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "preact": ">=10.19.0"
+  },
+  "peerDependenciesMeta": {
+    "preact": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  }
+}
