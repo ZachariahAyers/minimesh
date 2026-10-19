@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="page.styles.scss" />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <main>
+      <%- faces.greeting %>
+      <%- faces.notes %>
+    </main>
+    <p class="log" aria-live="polite"></p>
+    <script src="page.client.ts"></script>
+  </body>
+</html>
