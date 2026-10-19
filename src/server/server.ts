@@ -5,8 +5,10 @@ import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import { NEST_HEADER, type ViewContext } from "../shared.ts";
 import { renderChildren } from "./children.ts";
+import { detectDevice } from "./device.ts";
 import { assetTags, builtName, fragment, page, rewriteAssets } from "./html.ts";
-import { compileView } from "./render.ts";
+import { liveScript, registerLiveReload } from "./live.ts";
+import { compileView, renderTemplate } from "./render.ts";
 import type { Face, FaceContext, MeshServerOptions, Preprocessor, View } from "./types.ts";
 
 const NAME = /^[a-z\d][a-z\d-]*$/i;
@@ -50,23 +52,34 @@ export async function createMeshServer(options: MeshServerOptions): Promise<Fast
   const baseUrl = (options.publicUrl ?? "").replace(/\/$/, "");
   const maxNestLevel = options.maxNestLevel ?? DEFAULT_MAX_NEST_LEVEL;
   const reload = options.reloadTemplates ?? process.env.NODE_ENV !== "production";
+  const dev = options.dev ?? process.env.MINIMESH_DEV === "1";
   const app = Fastify(options.fastify);
 
-  if (options.assetsDir !== undefined) {
+  for (const plugin of options.plugins ?? []) await app.register(plugin);
+
+  // Pages on other origins load these as module scripts, which needs CORS.
+  const cors = (reply: { header: (name: string, value: string) => unknown }) => {
+    reply.header("access-control-allow-origin", "*");
+  };
+  const assetsDir = options.assetsDir === undefined ? undefined : toPath(options.assetsDir);
+  if (assetsDir !== undefined) {
+    await app.register(fastifyStatic, { root: assetsDir, setHeaders: cors });
+  }
+  for (const dir of options.staticDirs ?? []) {
     await app.register(fastifyStatic, {
-      root: toPath(options.assetsDir),
-      setHeaders: (reply) => {
-        // Pages on other origins load these as module scripts, which needs CORS.
-        reply.header("access-control-allow-origin", "*");
-      },
+      root: toPath(dir.root),
+      prefix: dir.prefix,
+      decorateReply: assetsDir === undefined && dir === options.staticDirs?.[0],
+      setHeaders: cors,
     });
   }
+  if (dev) registerLiveReload(app, [root, ...(assetsDir === undefined ? [] : [assetsDir])]);
 
   app.get("/health", async () => ({ status: "ok" }));
 
   for (const face of options.faces) {
     for (const view of face.views) {
-      registerView(app, face, view, { root, baseUrl, maxNestLevel, reload, options });
+      registerView(app, face, view, { root, baseUrl, maxNestLevel, reload, dev, options });
     }
   }
   return app;
@@ -77,6 +90,7 @@ interface Settings {
   baseUrl: string;
   maxNestLevel: number;
   reload: boolean;
+  dev: boolean;
   options: MeshServerOptions;
 }
 
@@ -102,16 +116,25 @@ function registerView(app: FastifyInstance, face: Face, view: View, settings: Se
   ];
   const hydratesChildren = typeof view.template === "function";
   const assets = assetTags(view.assets ?? [], `${baseUrl}${path}`);
+  const routeOptions = {
+    ...options.shared?.routeOptions,
+    ...face.shared?.routeOptions,
+    ...view.routeOptions,
+  };
+  const devWrapper = view.devWrapper ?? face.shared?.devWrapper ?? options.shared?.devWrapper;
+  const wrapper = { className: view.className, attributes: view.attributes };
 
   async function prepare(request: FastifyRequest, reply: FaceContext["reply"]) {
     const nestLevel = nestLevelOf(request);
     const context: FaceContext = {
       face: face.name,
       view: view.name,
-      mesh: view.mesh === true && nestLevel === 0,
+      // In dev mode a face requested on its own renders as a page, so it can be previewed.
+      mesh: nestLevel === 0 && (view.mesh === true || settings.dev),
       nestLevel,
       request,
       reply,
+      device: detectDevice(request.headers),
       title: view.title ?? `${face.name} | ${view.name}`,
       data: {},
       helpers: { ...helpers },
@@ -121,30 +144,53 @@ function registerView(app: FastifyInstance, face: Face, view: View, settings: Se
     return context;
   }
 
-  app.get(path, async (request, reply) => {
+  app.get(path, routeOptions, async (request, reply) => {
     const nestLevel = nestLevelOf(request);
     if (nestLevel > settings.maxNestLevel) {
       return reply.code(508).send({ error: `Faces nested deeper than ${settings.maxNestLevel}.` });
     }
     const context = await prepare(request, reply);
     context.faces = await renderChildren(app, request, children, nestLevel);
+    const template = context.template;
     const client: ViewContext = {
       face: context.face,
       view: context.view,
       mesh: context.mesh,
       title: context.title,
       data: context.data,
-      faces: hydratesChildren ? context.faces : {},
+      faces: hydratesChildren || typeof template === "function" ? context.faces : {},
       nestLevel,
       baseUrl,
+      device: context.device,
+      params: {
+        path: { ...(request.params as Record<string, unknown>) },
+        query: { ...(request.query as Record<string, unknown>) },
+      },
+      dev: settings.dev,
     };
-    const html = rewriteAssets(await render(context, client), `${baseUrl}${path}`);
-    return reply
-      .type("text/html; charset=utf-8")
-      .send(context.mesh ? page(html, client, assets) : fragment(html, client, assets));
+    const rendered =
+      template === undefined
+        ? await render(context, client)
+        : await renderTemplate(template, client);
+    let html = rewriteAssets(rendered, `${baseUrl}${path}`);
+    if (!context.mesh) {
+      return reply.type("text/html; charset=utf-8").send(fragment(html, client, assets, wrapper));
+    }
+    const live = settings.dev ? liveScript(baseUrl) : "";
+    if (view.mesh !== true) {
+      // A dev preview of a face: keep its wrapper so its island mounts, then apply devWrapper.
+      html = fragment(html, { ...client, mesh: false }, assets, wrapper);
+      html = devWrapper === undefined ? html : devWrapper(html);
+      return reply.type("text/html; charset=utf-8").send(page(html, client, live, false));
+    }
+    return reply.type("text/html; charset=utf-8").send(page(html, client, assets + live));
   });
 
-  app.get(`${path}data/`, async (request, reply) => (await prepare(request, reply)).data);
+  app.get(
+    `${path}data/`,
+    routeOptions,
+    async (request, reply) => (await prepare(request, reply)).data,
+  );
 
   app.get(`${path}manifest/`, async () => ({
     face: face.name,

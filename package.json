@@ -3,12 +3,12 @@
   "version": "2.0.0",
   "description": "Server-composed micro-frontends: render faces on any server, compose them into pages, hydrate them as islands.",
   "keywords": [
-    "micro-frontends",
-    "server-side-rendering",
-    "islands",
+    "composition",
     "fastify",
+    "islands",
+    "micro-frontends",
     "preact",
-    "composition"
+    "server-side-rendering"
   ],
   "homepage": "https://github.com/ZachariahAyers/minimesh#readme",
   "bugs": "https://github.com/ZachariahAyers/minimesh/issues",
@@ -42,20 +42,23 @@
   ],
   "scripts": {
     "build": "tsdown",
-    "check": "npm run lint && npm run typecheck && npm test && npm run build",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build && npm run site",
     "example": "npm run build && node dist/cli.js build examples/basic/faces --outdir examples/basic/dist && node examples/basic/server.ts",
     "format": "biome format --write",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "prepack": "npm run build",
+    "site": "node --conditions=source site/build.ts",
     "test": "node --conditions=source --test \"test/**/*.test.ts\"",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@fastify/static": "^10.1.6",
+    "bowser": "^2.14.1",
     "ejs": "^7.0.2",
     "esbuild": "^0.28.2",
     "fastify": "^5.12.7",
+    "highlight.js": "^11.12.0",
     "markdown-it": "^15.0.3",
     "node-html-parser": "^9.0.5",
     "preact-render-to-string": "^6.8.1",

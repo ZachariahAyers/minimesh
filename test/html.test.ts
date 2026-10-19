@@ -20,6 +20,9 @@ const context: ViewContext = {
   faces: {},
   nestLevel: 1,
   baseUrl: "",
+  device: "desktop",
+  params: { path: {}, query: {} },
+  dev: false,
 };
 
 describe("escaping", () => {

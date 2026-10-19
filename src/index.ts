@@ -8,4 +8,4 @@ export type {
   Shared,
   View,
 } from "./server/types.ts";
-export type { PublicData, ViewContext } from "./shared.ts";
+export type { Device, PublicData, ViewContext } from "./shared.ts";

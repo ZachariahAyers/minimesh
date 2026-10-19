@@ -115,10 +115,13 @@ describe("rendering", () => {
     assert.deepEqual(Object.keys(contextOf(html)).sort(), [
       "baseUrl",
       "data",
+      "dev",
+      "device",
       "face",
       "faces",
       "mesh",
       "nestLevel",
+      "params",
       "title",
       "view",
     ]);

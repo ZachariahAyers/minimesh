@@ -68,16 +68,36 @@ function marker(context: ViewContext): string {
   return `${ATTR.face}="${escapeHtml(context.face)}" ${ATTR.view}="${escapeHtml(context.view)}"`;
 }
 
+/** Extra classes and attributes for a face's wrapping element. */
+export interface Wrapper {
+  className?: string | undefined;
+  attributes?: Record<string, string> | undefined;
+}
+
+const ATTRIBUTE_NAME = /^[a-z_:][\w:.-]*$/i;
+
 /** Wraps a face's markup so the browser runtime can find it and its context. Assets go first. */
-export function fragment(html: string, context: ViewContext, assets = ""): string {
-  return `${assets}<section class="minimesh-face" ${marker(context)}>${html}${contextScript(context)}</section>`;
+export function fragment(
+  html: string,
+  context: ViewContext,
+  assets = "",
+  wrapper: Wrapper = {},
+): string {
+  const className = ["minimesh-face", wrapper.className].filter(Boolean).join(" ");
+  let extra = "";
+  for (const [name, value] of Object.entries(wrapper.attributes ?? {})) {
+    if (!ATTRIBUTE_NAME.test(name)) throw new Error(`Invalid attribute name "${name}".`);
+    extra += ` ${name}="${escapeHtml(value)}"`;
+  }
+  return `${assets}<section class="${escapeHtml(className)}" ${marker(context)}${extra}>${html}${contextScript(context)}</section>`;
 }
 
 /**
  * Finishes a mesh as a full HTML page: adds the shell if the template has none, moves face
  * stylesheets into the head once each, drops repeated module scripts, and adds the context.
+ * `markBody` false leaves the body unmarked, for a page that only previews one face.
  */
-export function page(html: string, context: ViewContext, assets = ""): string {
+export function page(html: string, context: ViewContext, assets = "", markBody = true): string {
   const source = /<body[\s>]/i.test(html)
     ? html
     : `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(context.title)}</title></head><body>${html}</body></html>`;
@@ -105,9 +125,11 @@ export function page(html: string, context: ViewContext, assets = ""): string {
     else scripts.add(src);
   }
 
-  body.setAttribute(ATTR.face, context.face);
-  body.setAttribute(ATTR.view, context.view);
-  body.insertAdjacentHTML("beforeend", contextScript(context));
+  if (markBody) {
+    body.setAttribute(ATTR.face, context.face);
+    body.setAttribute(ATTR.view, context.view);
+    body.insertAdjacentHTML("beforeend", contextScript(context));
+  }
   return root.toString();
 }
 

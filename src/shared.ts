@@ -19,6 +19,12 @@ export const DEFAULT_TOPIC = "message";
 
 export type PublicData = Record<string, unknown>;
 
+/** Device class of the visitor, from client hints and the user agent. */
+export type Device = "desktop" | "mobile" | "tablet" | "tv" | "bot";
+
+/** Path the browser runtime listens on for reload events when dev mode is on. */
+export const LIVE_PATH = "/_minimesh/live";
+
 /** The part of a render that is safe to send to the browser. */
 export interface ViewContext<Data extends PublicData = PublicData> {
   face: string;
@@ -33,4 +39,9 @@ export interface ViewContext<Data extends PublicData = PublicData> {
   nestLevel: number;
   /** Origin of the server that rendered this view, or "" for same-origin. */
   baseUrl: string;
+  device: Device;
+  /** The request's route parameters and query string. Headers and body stay on the server. */
+  params: { path: Record<string, unknown>; query: Record<string, unknown> };
+  /** True on a server started in dev mode; the runtime then logs each view it mounts. */
+  dev: boolean;
 }

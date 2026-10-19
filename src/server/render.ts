@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { extname } from "node:path";
 import ejs from "ejs";
+import hljs from "highlight.js";
 import MarkdownIt from "markdown-it";
 import type { ComponentType } from "preact";
 import type { ViewContext } from "../shared.ts";
@@ -8,7 +9,33 @@ import type { FaceContext, View } from "./types.ts";
 
 export const TEMPLATE_EXTENSIONS: readonly string[] = [".html", ".ejs", ".md"];
 
-const markdown = new MarkdownIt({ html: true, linkify: true, typographer: true });
+/**
+ * Markdown with fenced code highlighted by highlight.js. The markup carries `hljs` classes; load a
+ * highlight.js theme stylesheet to colour it.
+ */
+export const markdown: InstanceType<typeof MarkdownIt> = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true,
+  highlight: (code, language) => {
+    const known = language !== "" && hljs.getLanguage(language) !== undefined;
+    const html = known
+      ? hljs.highlight(code, { language, ignoreIllegals: true }).value
+      : markdown.utils.escapeHtml(code);
+    const name = known ? ` language-${markdown.utils.escapeHtml(language)}` : "";
+    return `<pre class="hljs"><code class="hljs${name}">${html}</code></pre>`;
+  },
+});
+
+/** Renders a template chosen at request time: an HTML string or a Preact component. */
+export function renderTemplate(
+  template: string | ComponentType<ViewContext>,
+  client: ViewContext,
+): Promise<string> {
+  return typeof template === "function"
+    ? renderPreact(template, client)
+    : Promise.resolve(template);
+}
 
 /** Turns a view's template into a render function, reading files now or on every render. */
 export function compileView(
@@ -16,13 +43,9 @@ export function compileView(
   file: string | undefined,
   reload: boolean,
 ): (context: FaceContext, client: ViewContext) => Promise<string> {
-  if (typeof view.template === "function") {
-    const component = view.template;
-    return (_context, client) => renderPreact(component, client);
-  }
-  if (typeof view.template === "string") {
-    const html = view.template;
-    return async () => html;
+  if (view.template !== undefined) {
+    const template = view.template;
+    return (_context, client) => renderTemplate(template, client);
   }
   if (file === undefined) {
     throw new Error(`View "${view.name}" needs a template or a templateFile.`);
